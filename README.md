@@ -11,6 +11,11 @@ Wrap the selected text in customized tags with shortcuts.
 - Use the **wrapper**
 ![Use the wrapper](./WrapWithShortcut-UseWrapper.gif)
 
+### Special Thanks
+
+- [Benature](https://github.com/Benature) for [obsidian-underline](https://github.com/Benature/obsidian-underline). This project is forked from his!
+- [phibr0](https://github.com/phibr0) for [obsidian-macros](https://github.com/phibr0/obsidian-macros). I got really good examples for plugin settings.
+
 ### Support me
 
 If you find this plugin helpful, consider supporting me:
