@@ -1,137 +1,118 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { MarkdownView, Plugin, EditorPosition, Command } from "obsidian";
+import SettingsTab from './src/SettingsTab'
 
-// Remember to rename these classes and interfaces!
-
-interface MyPluginSettings {
-	mySetting: string;
+interface WrapperTag {
+  name: string;
+  commandKey: string;
+  startTag: string;
+  endTag: string;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
+interface WrapperTagSettings {
+  wrapperTags: WrapperTag[];
 }
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
-
-	async onload() {
-		await this.loadSettings();
-
-		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
-		});
-		// Perform additional things with the ribbon
-		ribbonIconEl.addClass('my-plugin-ribbon-class');
-
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
-
-		// This adds a simple command that can be triggered anywhere
-		this.addCommand({
-			id: 'open-sample-modal-simple',
-			name: 'Open sample modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			}
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'sample-editor-command',
-			name: 'Sample editor command',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection('Sample Editor Command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-sample-modal-complex',
-			name: 'Open sample modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-			}
-		});
-
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-	}
-
-	onunload() {
-
-	}
-
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
+const DEFAULT_SETTINGS: WrapperTagSettings = {
+  wrapperTags: [
+    {
+      name: 'Underline',
+      commandKey: 'u',
+      startTag: '<u>',
+      endTag: '</u>'
+    },
+  ]
 }
 
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
+export default class WrapWithShortcut extends Plugin {
+  settings: WrapperTagSettings;
 
-	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
+  async onload() {
+    await this.loadSettings();
 
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-	}
-}
+    this.settings.wrapperTags.forEach(wrapperTag => {
+      const command: Command = {
+        id: `wrap-with-shortcut-${wrapperTag.commandKey}`,
+        name: `Toggle ${wrapperTag.name}`,
+        callback: () => this.wrapSelectedTextIn(wrapperTag.startTag, wrapperTag.endTag),
+        hotkeys: [
+          {
+            modifiers: ["Mod"],
+            key: wrapperTag.commandKey
+          }
+        ]
+      };
+      this.addCommand(command);
+    });
 
-class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+    this.addSettingTab(new SettingsTab(this));
+  }
 
-	constructor(app: App, plugin: MyPlugin) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
+  wrapSelectedTextIn(startTag = '<u>', endTag = '</u>'): void {
+    const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+    if (!markdownView) {
+      return;
+    }
+    if (startTag === '' || endTag === '') {
+      return;
+    }
+    const editor = markdownView.editor;
 
-	display(): void {
-		const {containerEl} = this;
+    const selectedText = editor.somethingSelected() ? editor.getSelection() : "";
 
-		containerEl.empty();
+    function toPos(pos: number): EditorPosition {
+      return editor.offsetToPos(pos);
+    }
 
-		containerEl.createEl('h2', {text: 'Settings for my awesome plugin.'});
+    function getRange(from: number, to: number): string {
+      try {
+        return editor.getRange(toPos(from), toPos(to));
+      } catch (_) {
+        return '';
+      }
+    }
 
-		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
-				.onChange(async (value) => {
-					console.log('Secret: ' + value);
-					this.plugin.settings.mySetting = value;
-					await this.plugin.saveSettings();
-				}));
-	}
+    /* Detect whether the selected text is packed by <u></u>.
+       If true, unpack it, else pack with <u></u>. */
+
+    const fos = editor.posToOffset(editor.getCursor("from")); // from offset
+    const tos = editor.posToOffset(editor.getCursor("to")); // to offset
+    const len = selectedText.length;
+
+    const beforeText = getRange(fos - startTag.length, tos - len);
+    const afterText = getRange(fos + len, tos + endTag.length);
+    const startText = getRange(fos, fos + startTag.length);
+    const endText = getRange(tos - endTag.length, tos);
+
+    if (beforeText === startTag && afterText === endTag) {
+      //=> undo underline (inside selection)
+      editor.setSelection(toPos(fos - startTag.length), toPos(tos + endTag.length));
+      editor.replaceSelection(`${selectedText}`);
+      // re-select
+      editor.setSelection(toPos(fos - startTag.length), toPos(tos - startTag.length));
+    } else if (startText === startTag && endText === endTag) {
+      //=> undo underline (outside selection)
+      editor.replaceSelection(editor.getRange(toPos(fos + startTag.length), toPos(tos - endTag.length)));
+      // re-select
+      editor.setSelection(toPos(fos), toPos(tos - (startTag.length + endTag.length)));
+    } else {
+      //=> do underline
+      if (selectedText) {
+        editor.replaceSelection(`${startTag}${selectedText}${endTag}`);
+        editor.setSelection(toPos(fos + startTag.length), toPos(tos + startTag.length));
+      } else {
+        editor.replaceSelection(`${startTag}${endTag}`);
+        const cursor = editor.getCursor();
+        cursor.ch -= endTag.length;
+        editor.setCursor(cursor);
+      }
+    }
+  }
+
+  async loadSettings() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+  }
+
+  async saveSettings() {
+    await this.saveData(this.settings);
+  }
 }
