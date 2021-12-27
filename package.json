@@ -1,6 +1,6 @@
 {
   "name": "obsidian-wrap-with-shortcuts",
-	"version": "0.9.1",
+	"version": "1.0.1",
   "description": "Wrap selected text in custom tags with shortcuts.",
 	"main": "main.js",
 	"scripts": {
