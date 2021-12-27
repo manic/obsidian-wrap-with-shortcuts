@@ -10,7 +10,6 @@ export default class SettingsTab extends PluginSettingTab {
 		this.plugin = plugin;
 
 		addEventListener("M-wrapperAdded", async (e: CustomEvent) => {
-			// add
 			this.plugin.settings.wrapperTags.push({
 				name: e.detail.name,
 				commandKey: e.detail.commandKey,
@@ -19,6 +18,7 @@ export default class SettingsTab extends PluginSettingTab {
 			});
 
 			await this.plugin.saveSettings();
+			new Notice("You will need to restart Obsidian to use it.");
 			this.display();
 		});
 	}
@@ -27,12 +27,12 @@ export default class SettingsTab extends PluginSettingTab {
 		const { containerEl } = this;
 
 		containerEl.empty();
-		containerEl.createEl('h2', { text: 'Wrapper Toggle Settings' });
+		containerEl.createEl('h2', { text: 'Wrapper Settings' });
 
 		// Function: Add new formatting shortcut
 		new Setting(containerEl)
-			.setName("Add new formatting shortcut")
-			.setDesc("Create a new Group of Commands to execute one after another.")
+			.setName("Add a new wrapper with a shortcut")
+			.setDesc("Create a new wrapper to wrap the selected text in the custom tags.")
 			.addButton(cb => {
 				cb.setButtonText("+")
 					.onClick(() => {
@@ -42,7 +42,7 @@ export default class SettingsTab extends PluginSettingTab {
 
 		// Function: list current toggle settings
 		this.plugin.settings.wrapperTags.forEach(wrapperTag => {
-			const desc = `Ctrl + ${wrapperTag.commandKey} => ${wrapperTag.startTag}${wrapperTag.endTag}`;
+			const desc = `Ctrl + ${wrapperTag.commandKey} => ${wrapperTag.startTag}{selectedText}${wrapperTag.endTag}`;
 			new Setting(containerEl)
 				.setName(wrapperTag.name)
 				.setDesc(desc)
@@ -51,7 +51,7 @@ export default class SettingsTab extends PluginSettingTab {
 					bt.onClick(async () => {
 						this.plugin.settings.wrapperTags.remove(wrapperTag);
 						this.display();
-						new Notice("You will need to restart Obsidian to fully remove the Wrapper Shortcut");
+						new Notice("You will need to restart Obsidian to fully remove the Wrapper.");
 						await this.plugin.saveSettings();
 					})
 				})

@@ -1,6 +1,6 @@
 {
-  "id": "obsidian-wrap-with-shortcut",
-  "name": "Wrap with shortcut",
+  "id": "obsidian-wrap-with-shortcuts",
+  "name": "Wrap with shortcuts",
   "description": "Wrap selected text in custom tags with shortcuts.",
   "isDesktopOnly": true,
   "author": "Manic Chuang",

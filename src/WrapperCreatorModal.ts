@@ -21,11 +21,11 @@ export default class WrapperCreatorModal extends Modal {
 	display() {
 		const { contentEl: el } = this;
 		el.empty();
-		this.titleEl.setText("Add a new shortcut toggle format")
+		this.titleEl.setText("Add a new wrapper")
 
 		new Setting(el)
 			.setName('Name')
-			.setDesc("Specify the Name of your format to have shortcut.")
+			.setDesc("Specify the Name of your wrapper.")
 			.addText(cb => {
 				cb.setValue(this.name ?? "")
 					.onChange(value => {
@@ -35,11 +35,11 @@ export default class WrapperCreatorModal extends Modal {
 
 		new Setting(el)
 			.setName('Command Key')
-			.setDesc("Specify the shortcut key you want to use (You can re-map it in the Shortcut section).")
+			.setDesc("Specify the shortcut key(You can re-map it in OPTIONS -> Hotkeys).")
 			.addText(cb => {
 				cb.setValue(this.commandKey ?? "")
 					.onChange(value => {
-						this.commandKey = value.trim();
+						this.commandKey = value.trim().toLowerCase()[0] ?? "";
 					})
 			})
 
