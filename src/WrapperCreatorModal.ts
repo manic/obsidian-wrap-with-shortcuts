@@ -1,16 +1,21 @@
 import { Modal, Setting } from "obsidian";
 
-import WrapWithShortcut from "../main";
+import WrapWithShortcut, { WrapperTag } from "../main";
 
 export default class WrapperCreatorModal extends Modal {
 	plugin: WrapWithShortcut;
-	name: string;
-	commandKey: string;
-	startTag: string;
-	endTag: string;
+	wrapper: WrapperTag;
+	editMode: boolean;
 
-	constructor(plugin: WrapWithShortcut) {
+	constructor(plugin: WrapWithShortcut, wrapper?: WrapperTag) {
 		super(plugin.app);
+		if (wrapper) {
+			this.wrapper = wrapper;
+			this.editMode = true;
+		} else {
+			this.wrapper = { name: '', commandKey: '', startTag: '', endTag: '' };
+			this.editMode = false;
+		}
 	}
 
 	onOpen() {
@@ -21,15 +26,16 @@ export default class WrapperCreatorModal extends Modal {
 	display() {
 		const { contentEl: el } = this;
 		el.empty();
-		this.titleEl.setText("Add a new wrapper")
+		this.titleEl.setText(this.editMode ? "Edit wrapper" : "Add a new wrapper")
 
 		new Setting(el)
 			.setName('Name')
 			.setDesc("Specify the Name of your wrapper.")
 			.addText(cb => {
-				cb.setValue(this.name ?? "")
+				cb.setValue(this.wrapper.name ?? "")
+					.setDisabled(this.editMode)
 					.onChange(value => {
-						this.name = value.trim();
+						this.wrapper.name = value.trim();
 					})
 			})
 
@@ -37,9 +43,9 @@ export default class WrapperCreatorModal extends Modal {
 			.setName('Command Key')
 			.setDesc("Specify the shortcut key(You can re-map it in OPTIONS -> Hotkeys).")
 			.addText(cb => {
-				cb.setValue(this.commandKey ?? "")
+				cb.setValue(this.wrapper.commandKey ?? "")
 					.onChange(value => {
-						this.commandKey = value.trim().toLowerCase()[0] ?? "";
+						this.wrapper.commandKey = value.trim().toLowerCase()[0] ?? "";
 					})
 			})
 
@@ -47,9 +53,9 @@ export default class WrapperCreatorModal extends Modal {
 			.setName('Start Tag')
 			.setDesc("Specify the start tag")
 			.addText(cb => {
-				cb.setValue(this.startTag ?? "")
+				cb.setValue(this.wrapper.startTag ?? "")
 					.onChange(value => {
-						this.startTag = value.trim();
+						this.wrapper.startTag = value.trim();
 					})
 			})
 
@@ -57,9 +63,9 @@ export default class WrapperCreatorModal extends Modal {
 			.setName('End Tag')
 			.setDesc("Specify the end tag")
 			.addText(cb => {
-				cb.setValue(this.endTag ?? "")
+				cb.setValue(this.wrapper.endTag ?? "")
 					.onChange(value => {
-						this.endTag = value.trim();
+						this.wrapper.endTag = value.trim();
 					})
 			})
 
@@ -67,13 +73,9 @@ export default class WrapperCreatorModal extends Modal {
 		const btn = createEl("button", { text: "Finish" })
 		btnDiv.appendChild(btn);
 		btn.addEventListener("click", () => {
-			dispatchEvent(new CustomEvent("M-wrapperAdded", {
-				detail: {
-					name: this.name,
-					commandKey: this.commandKey,
-					startTag: this.startTag,
-					endTag: this.endTag,
-				}
+			const eventName = this.editMode ? "M-wrapperEditted" : "M-wrapperAdded";
+			dispatchEvent(new CustomEvent(eventName, {
+				detail: this.wrapper
 			}));
 			this.close();
 		});
