@@ -53,7 +53,7 @@ export default class SettingsTab extends PluginSettingTab {
 
 		// Function: list current toggle settings
 		this.plugin.settings.wrapperTags.forEach(wrapperTag => {
-			const desc = `Ctrl + ${wrapperTag.commandKey} => ${wrapperTag.startTag}{selectedText}${wrapperTag.endTag}`;
+			const desc = `Press Hotkey => ${wrapperTag.startTag}{selectedText}${wrapperTag.endTag}`;
 			new Setting(containerEl)
 				.setName(wrapperTag.name)
 				.setDesc(desc)

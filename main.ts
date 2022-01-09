@@ -3,7 +3,6 @@ import SettingsTab from './src/SettingsTab'
 
 export interface WrapperTag {
   name: string;
-  commandKey: string;
   startTag: string;
   endTag: string;
 }
@@ -16,7 +15,6 @@ const DEFAULT_SETTINGS: WrapperTagSettings = {
   wrapperTags: [
     {
       name: 'Underline',
-      commandKey: 'u',
       startTag: '<u>',
       endTag: '</u>'
     },
@@ -29,17 +27,11 @@ export default class WrapWithShortcut extends Plugin {
   async onload() {
     await this.loadSettings();
 
-    this.settings.wrapperTags.forEach(wrapperTag => {
+    this.settings.wrapperTags.forEach((wrapperTag, index) => {
       const command: Command = {
-        id: `wrap-with-shortcut-${wrapperTag.commandKey}`,
+        id: `wrap-with-shortcut-${index}`,
         name: `Toggle ${wrapperTag.name}`,
         callback: () => this.wrapSelectedTextIn(wrapperTag.startTag, wrapperTag.endTag),
-        hotkeys: [
-          {
-            modifiers: ["Mod"],
-            key: wrapperTag.commandKey
-          }
-        ]
       };
       this.addCommand(command);
     });

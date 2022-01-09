@@ -6,9 +6,16 @@ Wrap the selected text in customized tags with shortcuts.
 
 ### Procedure
 
-- Create a **wrapper**
+#### Create a **wrapper** 
+
 ![Create a wrapper](./WrapWithShortcut-AddWrapper.gif)
-- Use the **wrapper**
+
+#### Restart Obsidian, Go Settings -> Hotkeys
+
+![Remap a shortcut](./WrapWithShortcut-MapHotkeys.gif)
+
+#### Use the **wrapper** 
+
 ![Use the wrapper](./WrapWithShortcut-UseWrapper.gif)
 
 ### Special Thanks
