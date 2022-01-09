@@ -13,7 +13,7 @@ export default class WrapperCreatorModal extends Modal {
 			this.wrapper = wrapper;
 			this.editMode = true;
 		} else {
-			this.wrapper = { name: '', commandKey: '', startTag: '', endTag: '' };
+			this.wrapper = { name: '', startTag: '', endTag: '' };
 			this.editMode = false;
 		}
 	}
@@ -36,16 +36,6 @@ export default class WrapperCreatorModal extends Modal {
 					.setDisabled(this.editMode)
 					.onChange(value => {
 						this.wrapper.name = value.trim();
-					})
-			})
-
-		new Setting(el)
-			.setName('Command Key')
-			.setDesc("Specify the shortcut key(You can re-map it in OPTIONS -> Hotkeys).")
-			.addText(cb => {
-				cb.setValue(this.wrapper.commandKey ?? "")
-					.onChange(value => {
-						this.wrapper.commandKey = value.trim().toLowerCase()[0] ?? "";
 					})
 			})
 
