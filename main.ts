@@ -1,7 +1,7 @@
 import { MarkdownView, Plugin, EditorPosition, Command } from "obsidian";
 import SettingsTab from './src/SettingsTab'
 
-interface WrapperTag {
+export interface WrapperTag {
   name: string;
   commandKey: string;
   startTag: string;
@@ -84,18 +84,18 @@ export default class WrapWithShortcut extends Plugin {
     const endText = getRange(tos - endTag.length, tos);
 
     if (beforeText === startTag && afterText === endTag) {
-      //=> undo underline (inside selection)
+      //=> undo (inside selection)
       editor.setSelection(toPos(fos - startTag.length), toPos(tos + endTag.length));
       editor.replaceSelection(`${selectedText}`);
       // re-select
       editor.setSelection(toPos(fos - startTag.length), toPos(tos - startTag.length));
     } else if (startText === startTag && endText === endTag) {
-      //=> undo underline (outside selection)
+      //=> undo (outside selection)
       editor.replaceSelection(editor.getRange(toPos(fos + startTag.length), toPos(tos - endTag.length)));
       // re-select
       editor.setSelection(toPos(fos), toPos(tos - (startTag.length + endTag.length)));
     } else {
-      //=> do underline
+      //=> do wrap
       if (selectedText) {
         editor.replaceSelection(`${startTag}${selectedText}${endTag}`);
         editor.setSelection(toPos(fos + startTag.length), toPos(tos + startTag.length));

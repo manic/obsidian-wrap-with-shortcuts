@@ -10,15 +10,26 @@ export default class SettingsTab extends PluginSettingTab {
 		this.plugin = plugin;
 
 		addEventListener("M-wrapperAdded", async (e: CustomEvent) => {
-			this.plugin.settings.wrapperTags.push({
-				name: e.detail.name,
-				commandKey: e.detail.commandKey,
-				startTag: e.detail.startTag,
-				endTag: e.detail.endTag,
-			});
+			this.plugin.settings.wrapperTags.push(e.detail);
 
 			await this.plugin.saveSettings();
 			new Notice("You will need to restart Obsidian to use it.");
+			this.display();
+		});
+
+		addEventListener("M-wrapperEditted", async (e: CustomEvent) => {
+			const tags = this.plugin.settings.wrapperTags;
+			const index = tags.findIndex(tag => tag.name === e.detail.name);
+			if (index === -1) {
+				this.plugin.settings.wrapperTags.push(e.detail);
+			} else {
+				this.plugin.settings.wrapperTags = [...tags.slice(0, index), e.detail, ...tags.slice(index + 1)];
+			}
+
+			await this.plugin.saveSettings();
+			if (index === -1) {
+				new Notice("You will need to restart Obsidian to use it.");
+			}
 			this.display();
 		});
 	}
@@ -46,6 +57,12 @@ export default class SettingsTab extends PluginSettingTab {
 			new Setting(containerEl)
 				.setName(wrapperTag.name)
 				.setDesc(desc)
+				.addExtraButton(bt => {
+					bt.setIcon("pencil");
+					bt.onClick(async () => {
+						new WrapperCreatorModal(this.plugin, wrapperTag).open();
+					})
+				})
 				.addExtraButton(bt => {
 					bt.setIcon("trash");
 					bt.onClick(async () => {
