@@ -13,7 +13,7 @@ export default class WrapperCreatorModal extends Modal {
 			this.wrapper = wrapper;
 			this.editMode = true;
 		} else {
-			this.wrapper = { name: '', startTag: '', endTag: '' };
+			this.wrapper = { id: `w${new Date().getTime()}`, name: '', startTag: '', endTag: '' };
 			this.editMode = false;
 		}
 	}
@@ -33,7 +33,6 @@ export default class WrapperCreatorModal extends Modal {
 			.setDesc("Specify the Name of your wrapper.")
 			.addText(cb => {
 				cb.setValue(this.wrapper.name ?? "")
-					.setDisabled(this.editMode)
 					.onChange(value => {
 						this.wrapper.name = value.trim();
 					})
