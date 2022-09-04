@@ -45,7 +45,7 @@ export default class WrapperCreatorModal extends Modal {
 			.addText(cb => {
 				cb.setValue(this.wrapper.startTag ?? "")
 					.onChange(value => {
-						this.wrapper.startTag = value.trim();
+						this.wrapper.startTag = value;
 					})
 			})
 
@@ -55,7 +55,7 @@ export default class WrapperCreatorModal extends Modal {
 			.addText(cb => {
 				cb.setValue(this.wrapper.endTag ?? "")
 					.onChange(value => {
-						this.wrapper.endTag = value.trim();
+						this.wrapper.endTag = value;
 					})
 			})
 
