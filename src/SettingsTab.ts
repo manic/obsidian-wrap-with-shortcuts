@@ -11,6 +11,7 @@ export default class SettingsTab extends PluginSettingTab {
 
 		addEventListener("M-wrapperAdded", async (e: CustomEvent) => {
 			this.plugin.settings.wrapperTags.push(e.detail);
+			this.sortSettings();
 
 			await this.plugin.saveSettings();
 			new Notice("You will need to restart Obsidian to use it.");
@@ -25,12 +26,19 @@ export default class SettingsTab extends PluginSettingTab {
 			} else {
 				this.plugin.settings.wrapperTags = [...tags.slice(0, index), e.detail, ...tags.slice(index + 1)];
 			}
+			this.sortSettings();
 
 			await this.plugin.saveSettings();
 			if (index === -1) {
 				new Notice("You will need to restart Obsidian to use it.");
 			}
 			this.display();
+		});
+	}
+
+	sortSettings(): void {
+		this.plugin.settings.wrapperTags.sort(function (a, b) {
+			return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
 		});
 	}
 

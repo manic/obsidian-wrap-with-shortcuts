@@ -2,6 +2,7 @@ import { MarkdownView, Plugin, EditorPosition, Command } from "obsidian";
 import SettingsTab from './src/SettingsTab'
 
 export interface WrapperTag {
+  id?: string; // 20220904: compitable with older version, mark as optional
   name: string;
   startTag: string;
   endTag: string;
@@ -14,6 +15,7 @@ interface WrapperTagSettings {
 const DEFAULT_SETTINGS: WrapperTagSettings = {
   wrapperTags: [
     {
+      id: 'underline',
       name: 'Underline',
       startTag: '<u>',
       endTag: '</u>'
@@ -26,10 +28,13 @@ export default class WrapWithShortcut extends Plugin {
 
   async onload() {
     await this.loadSettings();
+    if (this.settings.wrapperTags.length > 0 && !this.settings.wrapperTags[0].id) {
+      await this.applyWrapperTagID();
+    }
 
     this.settings.wrapperTags.forEach((wrapperTag, index) => {
       const command: Command = {
-        id: `wrap-with-shortcut-${index}`,
+        id: `wrap-with-shortcut-${wrapperTag.id}`,
         name: `Toggle ${wrapperTag.name}`,
         callback: () => this.wrapSelectedTextIn(wrapperTag.startTag, wrapperTag.endTag),
       };
@@ -106,5 +111,12 @@ export default class WrapWithShortcut extends Plugin {
 
   async saveSettings() {
     await this.saveData(this.settings);
+  }
+
+  async applyWrapperTagID() {
+    this.settings.wrapperTags.forEach((wrapperTag, index) => {
+      wrapperTag.id ||= `${index}`;
+    });
+    await this.saveSettings();
   }
 }
