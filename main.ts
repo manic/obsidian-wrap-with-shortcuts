@@ -1,4 +1,4 @@
-import { MarkdownView, Plugin, EditorPosition, Command } from "obsidian";
+import { MarkdownView, Plugin, EditorPosition } from "obsidian";
 import SettingsTab from './src/SettingsTab'
 
 export interface WrapperTag {
@@ -25,20 +25,44 @@ const DEFAULT_SETTINGS: WrapperTagSettings = {
 
 export default class WrapWithShortcut extends Plugin {
   settings: WrapperTagSettings;
+  
+  async editCommandsList(oldTag: WrapperTag | undefined, newTag: WrapperTag | undefined) {
+    if (oldTag !== undefined) {
+      //@ts-ignore
+      this.app.commands.removeCommand(`wrap-with-shortcut-${oldTag.id}`); //doesn't work in some condition
+    }
+    if (newTag !== undefined) {
+      this.addCommand({
+        id: `wrap-with-shortcut-${newTag.id}`,
+        name: `Toggle ${newTag.name}`,
+        callback: () =>
+          this.wrapSelectedTextIn(newTag.startTag, newTag.endTag
+          )
+      });
+    }
+  }
+  
+  async removeAllDeletedWrapCommand() {
+    //@ts-ignore
+    const pluginCommands = Object.keys(this.app.commands.commands).filter(key => key.startsWith('obsidian-wrap-with-shortcuts'));
+    for (const cmd of pluginCommands) {
+      //remove commands if the tag is deleted
+      if (!this.settings.wrapperTags.some((tag) => tag.id === cmd.replace('obsidian-wrap-with-shortcuts:wrap-with-shortcut-', ''))) {
+        //@ts-ignore
+        this.app.commands.removeCommand(cmd);
+      }
+    }
+  }
 
   async onload() {
+    console.log("loading plugin wrap-with-shortcut");
     await this.loadSettings();
     if (this.settings.wrapperTags.length > 0 && !this.settings.wrapperTags[0].id) {
       await this.applyWrapperTagID();
     }
 
-    this.settings.wrapperTags.forEach((wrapperTag, index) => {
-      const command: Command = {
-        id: `wrap-with-shortcut-${wrapperTag.id}`,
-        name: `Toggle ${wrapperTag.name}`,
-        callback: () => this.wrapSelectedTextIn(wrapperTag.startTag, wrapperTag.endTag),
-      };
-      this.addCommand(command);
+    this.settings.wrapperTags.forEach((wrapperTag) => {
+      this.editCommandsList(undefined, wrapperTag);
     });
 
     this.addSettingTab(new SettingsTab(this));
@@ -118,5 +142,9 @@ export default class WrapWithShortcut extends Plugin {
       wrapperTag.id ||= `${index}`;
     });
     await this.saveSettings();
+  }
+  
+  onunload() {
+    console.log("Unload plugin wrap-with-shortcut")
   }
 }

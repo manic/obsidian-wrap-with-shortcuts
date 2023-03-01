@@ -1,4 +1,4 @@
-import { PluginSettingTab, Setting, Notice } from "obsidian";
+import { PluginSettingTab, Setting } from "obsidian";
 import WrapWithShortcut from "../main";
 import WrapperCreatorModal from "./WrapperCreatorModal"
 
@@ -14,7 +14,7 @@ export default class SettingsTab extends PluginSettingTab {
 			this.sortSettings();
 
 			await this.plugin.saveSettings();
-			new Notice("You will need to restart Obsidian to use it.");
+			await this.plugin.editCommandsList(undefined, e.detail);
 			this.display();
 		});
 
@@ -23,15 +23,14 @@ export default class SettingsTab extends PluginSettingTab {
 			const index = tags.findIndex(tag => tag.name === e.detail.name);
 			if (index === -1) {
 				this.plugin.settings.wrapperTags.push(e.detail);
+				await this.plugin.editCommandsList(undefined, e.detail);
 			} else {
 				this.plugin.settings.wrapperTags = [...tags.slice(0, index), e.detail, ...tags.slice(index + 1)];
+				await this.plugin.editCommandsList(tags[index], e.detail);
 			}
 			this.sortSettings();
 
 			await this.plugin.saveSettings();
-			if (index === -1) {
-				new Notice("You will need to restart Obsidian to use it.");
-			}
 			this.display();
 		});
 	}
@@ -76,7 +75,7 @@ export default class SettingsTab extends PluginSettingTab {
 					bt.onClick(async () => {
 						this.plugin.settings.wrapperTags.remove(wrapperTag);
 						this.display();
-						new Notice("You will need to restart Obsidian to fully remove the Wrapper.");
+						await this.plugin.removeAllDeletedWrapCommand(wrapperTag)
 						await this.plugin.saveSettings();
 					})
 				})
