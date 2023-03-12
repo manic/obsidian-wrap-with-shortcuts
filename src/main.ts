@@ -1,5 +1,5 @@
-import { MarkdownView, Plugin, EditorPosition, Command } from "obsidian";
-import SettingsTab from './src/SettingsTab'
+import { Plugin, EditorPosition, Command, Editor } from "obsidian";
+import SettingsTab from './SettingsTab'
 
 export interface WrapperTag {
   name: string;
@@ -31,31 +31,25 @@ export default class WrapWithShortcut extends Plugin {
       const command: Command = {
         id: `wrap-with-shortcut-${index}`,
         name: `Toggle ${wrapperTag.name}`,
-        callback: () => this.wrapSelectedTextIn(wrapperTag.startTag, wrapperTag.endTag),
+        editorCallback: (editor:Editor) => this.wrapSelectedTextIn(editor, wrapperTag.startTag, wrapperTag.endTag),
       };
       this.addCommand(command);
+	  this.addSettingTab(new SettingsTab(this.app,this));
     });
 
-    this.addSettingTab(new SettingsTab(this));
   }
 
-  wrapSelectedTextIn(startTag = '<u>', endTag = '</u>'): void {
-    const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-    if (!markdownView) {
+  wrapSelectedTextIn(editor:Editor, startTag = '<u>', endTag = '</u>'): void {
+    if (startTag === '' && endTag === '') { //allow monotag
       return;
     }
-    if (startTag === '' || endTag === '') {
-      return;
-    }
-    const editor = markdownView.editor;
-
-    const selectedText = editor.somethingSelected() ? editor.getSelection() : "";
+    const selectedText = editor.getSelection();
 
     function toPos(pos: number): EditorPosition {
       return editor.offsetToPos(pos);
     }
 
-    function getRange(from: number, to: number): string {
+    function getRange(editor:Editor,from: number, to: number): string {
       try {
         return editor.getRange(toPos(from), toPos(to));
       } catch (_) {
@@ -65,20 +59,19 @@ export default class WrapWithShortcut extends Plugin {
 
     /* Detect whether the selected text is packed by <u></u>.
        If true, unpack it, else pack with <u></u>. */
-
     const fos = editor.posToOffset(editor.getCursor("from")); // from offset
     const tos = editor.posToOffset(editor.getCursor("to")); // to offset
     const len = selectedText.length;
 
-    const beforeText = getRange(fos - startTag.length, tos - len);
-    const afterText = getRange(fos + len, tos + endTag.length);
-    const startText = getRange(fos, fos + startTag.length);
-    const endText = getRange(tos - endTag.length, tos);
+    const beforeText = getRange(editor,fos - startTag.length, tos - len);
+    const afterText = getRange(editor,fos + len, tos + endTag.length);
+    const startText = getRange(editor,fos, fos + startTag.length);
+    const endText = getRange(editor,tos - endTag.length, tos);
 
     if (beforeText === startTag && afterText === endTag) {
       //=> undo (inside selection)
       editor.setSelection(toPos(fos - startTag.length), toPos(tos + endTag.length));
-      editor.replaceSelection(`${selectedText}`);
+      editor.replaceSelection(selectedText);
       // re-select
       editor.setSelection(toPos(fos - startTag.length), toPos(tos - startTag.length));
     } else if (startText === startTag && endText === endTag) {
