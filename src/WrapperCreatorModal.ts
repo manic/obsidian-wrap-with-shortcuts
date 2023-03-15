@@ -41,7 +41,7 @@ export default class WrapperCreatorModal extends Modal {
 		new Setting(el)
 			.setName('Start Tag')
 			.setDesc("Specify the start tag")
-			.addText(cb => {
+			.addTextArea(cb => {
 				cb.setValue(this.wrapper.startTag ?? "")
 					.onChange(value => {
 						this.wrapper.startTag = value;
@@ -51,7 +51,7 @@ export default class WrapperCreatorModal extends Modal {
 		new Setting(el)
 			.setName('End Tag')
 			.setDesc("Specify the end tag")
-			.addText(cb => {
+			.addTextArea(cb => {
 				cb.setValue(this.wrapper.endTag ?? "")
 					.onChange(value => {
 						this.wrapper.endTag = value;
@@ -60,6 +60,9 @@ export default class WrapperCreatorModal extends Modal {
 
 		const btnDiv = el.createDiv({ cls: "M-flex-center" })
 		const btn = createEl("button", { text: "Finish" })
+		// Align button to right
+		btn.style.cssText =
+				"display: flex; flex-direction: row; margin-left: auto;";
 		btnDiv.appendChild(btn);
 		btn.addEventListener("click", () => {
 			const eventName = this.editMode ? "M-wrapperEditted" : "M-wrapperAdded";
@@ -68,6 +71,5 @@ export default class WrapperCreatorModal extends Modal {
 			}));
 			this.close();
 		});
-
 	}
 }
