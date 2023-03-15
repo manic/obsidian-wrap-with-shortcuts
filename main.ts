@@ -49,12 +49,12 @@ export default class WrapWithShortcut extends Plugin {
     if (!markdownView) {
       return;
     }
-    if (startTag === '' || endTag === '') {
+    if (startTag === '' && endTag === '') {//allow monotag
       return;
     }
     const editor = markdownView.editor;
 
-    const selectedText = editor.somethingSelected() ? editor.getSelection() : "";
+    const selectedText = editor.somethingSelected() ? editor.getSelection() : ""; 
 
     function toPos(pos: number): EditorPosition {
       return editor.offsetToPos(pos);
@@ -83,7 +83,7 @@ export default class WrapWithShortcut extends Plugin {
     if (beforeText === startTag && afterText === endTag) {
       //=> undo (inside selection)
       editor.setSelection(toPos(fos - startTag.length), toPos(tos + endTag.length));
-      editor.replaceSelection(`${selectedText}`);
+      editor.replaceSelection(selectedText);
       // re-select
       editor.setSelection(toPos(fos - startTag.length), toPos(tos - startTag.length));
     } else if (startText === startTag && endText === endTag) {
