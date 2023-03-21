@@ -49,7 +49,7 @@ export default class WrapWithShortcut extends Plugin {
     if (!markdownView) {
       return;
     }
-    if (startTag === '' || endTag === '') {
+    if (startTag === '' && endTag === '') {
       return;
     }
     const editor = markdownView.editor;
