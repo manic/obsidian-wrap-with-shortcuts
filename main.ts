@@ -1,4 +1,4 @@
-import { MarkdownView, Plugin, EditorPosition, Command } from "obsidian";
+import { Command, Editor, EditorPosition, Plugin} from "obsidian";
 import SettingsTab from './src/SettingsTab'
 
 export interface WrapperTag {
@@ -36,7 +36,7 @@ export default class WrapWithShortcut extends Plugin {
       const command: Command = {
         id: `wrap-with-shortcut-${wrapperTag.id}`,
         name: `Toggle ${wrapperTag.name}`,
-        callback: () => this.wrapSelectedTextIn(wrapperTag.startTag, wrapperTag.endTag),
+        editorCallback: (editor: Editor) => this.wrapSelectedTextIn(editor, wrapperTag.startTag, wrapperTag.endTag),
       };
       this.addCommand(command);
     });
@@ -44,25 +44,20 @@ export default class WrapWithShortcut extends Plugin {
     this.addSettingTab(new SettingsTab(this));
   }
 
-  wrapSelectedTextIn(startTag = '<u>', endTag = '</u>'): void {
-    const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-    if (!markdownView) {
-      return;
-    }
+  wrapSelectedTextIn(editor: Editor, startTag = '<u>', endTag = '</u>'): void {
     if (startTag === '' && endTag === '') {
       return;
     }
-    const editor = markdownView.editor;
 
-    const selectedText = editor.somethingSelected() ? editor.getSelection() : "";
+    const selectedText = editor.getSelection();
 
-    function toPos(pos: number): EditorPosition {
+    function toPos(editor: Editor, pos: number): EditorPosition {
       return editor.offsetToPos(pos);
     }
 
-    function getRange(from: number, to: number): string {
+    function getRange(editor: Editor, from: number, to: number): string {
       try {
-        return editor.getRange(toPos(from), toPos(to));
+        return editor.getRange(toPos(editor, from), toPos(editor, to));
       } catch (_) {
         return '';
       }
@@ -75,33 +70,25 @@ export default class WrapWithShortcut extends Plugin {
     const tos = editor.posToOffset(editor.getCursor("to")); // to offset
     const len = selectedText.length;
 
-    const beforeText = getRange(fos - startTag.length, tos - len);
-    const afterText = getRange(fos + len, tos + endTag.length);
-    const startText = getRange(fos, fos + startTag.length);
-    const endText = getRange(tos - endTag.length, tos);
+    const beforeText = getRange(editor, fos - startTag.length, tos - len);
+    const afterText = getRange(editor, fos + len, tos + endTag.length);
+    const startText = getRange(editor, fos, fos + startTag.length);
+    const endText = getRange(editor, tos - endTag.length, tos);
 
     if (beforeText === startTag && afterText === endTag) {
       //=> undo (inside selection)
-      editor.setSelection(toPos(fos - startTag.length), toPos(tos + endTag.length));
-      editor.replaceSelection(`${selectedText}`);
+      editor.setSelection(toPos(editor, fos - startTag.length), toPos(editor, tos + endTag.length));
+      editor.replaceSelection(selectedText);
       // re-select
-      editor.setSelection(toPos(fos - startTag.length), toPos(tos - startTag.length));
+      editor.setSelection(toPos(editor, fos - startTag.length), toPos(editor, tos - startTag.length));
     } else if (startText === startTag && endText === endTag) {
       //=> undo (outside selection)
-      editor.replaceSelection(editor.getRange(toPos(fos + startTag.length), toPos(tos - endTag.length)));
+      editor.replaceSelection(editor.getRange(toPos(editor, fos + startTag.length), toPos(editor, tos - endTag.length)));
       // re-select
-      editor.setSelection(toPos(fos), toPos(tos - (startTag.length + endTag.length)));
+      editor.setSelection(toPos(editor, fos), toPos(editor, tos - (startTag.length + endTag.length)));
     } else {
-      //=> do wrap
-      if (selectedText) {
-        editor.replaceSelection(`${startTag}${selectedText}${endTag}`);
-        editor.setSelection(toPos(fos + startTag.length), toPos(tos + startTag.length));
-      } else {
-        editor.replaceSelection(`${startTag}${endTag}`);
-        const cursor = editor.getCursor();
-        cursor.ch -= endTag.length;
-        editor.setCursor(cursor);
-      }
+      editor.replaceSelection(`${startTag}${selectedText}${endTag}`);
+      editor.setSelection(toPos(editor, fos + startTag.length), toPos(editor, tos + startTag.length));
     }
   }
 

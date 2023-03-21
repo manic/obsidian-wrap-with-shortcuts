@@ -31,7 +31,7 @@ export default class WrapperCreatorModal extends Modal {
 		new Setting(el)
 			.setName('Name')
 			.setDesc("Specify the Name of your wrapper.")
-			.addText(cb => {
+			.addText((cb) => {
 				cb.setValue(this.wrapper.name ?? "")
 					.onChange(value => {
 						this.wrapper.name = value.trim();
@@ -41,7 +41,7 @@ export default class WrapperCreatorModal extends Modal {
 		new Setting(el)
 			.setName('Start Tag')
 			.setDesc("Specify the start tag")
-			.addText(cb => {
+			.addTextArea((cb) => {
 				cb.setValue(this.wrapper.startTag ?? "")
 					.onChange(value => {
 						this.wrapper.startTag = value;
@@ -51,7 +51,7 @@ export default class WrapperCreatorModal extends Modal {
 		new Setting(el)
 			.setName('End Tag')
 			.setDesc("Specify the end tag")
-			.addText(cb => {
+			.addTextArea((cb) => {
 				cb.setValue(this.wrapper.endTag ?? "")
 					.onChange(value => {
 						this.wrapper.endTag = value;
