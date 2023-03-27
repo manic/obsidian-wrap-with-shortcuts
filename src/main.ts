@@ -1,5 +1,5 @@
 import { Command, Editor, EditorPosition, Plugin} from "obsidian";
-import SettingsTab from './src/SettingsTab'
+import SettingsTab from './SettingsTab'
 
 export interface WrapperTag {
   id?: string; // 20220904: compitable with older version, mark as optional

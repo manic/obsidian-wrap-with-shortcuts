@@ -1,5 +1,5 @@
 import { PluginSettingTab, Setting, Notice } from "obsidian";
-import WrapWithShortcut from "../main";
+import WrapWithShortcut from "./main";
 import WrapperCreatorModal from "./WrapperCreatorModal"
 
 export default class SettingsTab extends PluginSettingTab {
