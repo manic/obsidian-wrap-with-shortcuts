@@ -1,5 +1,5 @@
-import { PluginSettingTab, Setting, Notice } from "obsidian";
-import WrapWithShortcut from "../main";
+import { PluginSettingTab, Setting } from "obsidian";
+import WrapWithShortcut from "./main";
 import WrapperCreatorModal from "./WrapperCreatorModal"
 
 export default class SettingsTab extends PluginSettingTab {
@@ -75,7 +75,8 @@ export default class SettingsTab extends PluginSettingTab {
 				.addExtraButton(bt => {
 					bt.setIcon("trash");
 					bt.onClick(async () => {
-						const cmd = this.plugin.manifest.id + ":" + `wrap-with-shortcut-${wrapperTag.id}`
+						const cmd = `${this.plugin.manifest.id}:wrap-with-shortcut-${wrapperTag.id}`
+						// @ts-ignore
 						await this.app.commands.removeCommand(cmd);
 						this.plugin.settings.wrapperTags.remove(wrapperTag);
 						this.display();

@@ -1,6 +1,6 @@
 import { Modal, Setting } from "obsidian";
 
-import WrapWithShortcut, { WrapperTag } from "../main";
+import WrapWithShortcut, { WrapperTag } from "./main";
 
 export default class WrapperCreatorModal extends Modal {
 	plugin: WrapWithShortcut;
