@@ -25,7 +25,7 @@ const DEFAULT_SETTINGS: WrapperTagSettings = {
 
 export default class WrapWithShortcut extends Plugin {
   settings: WrapperTagSettings;
-  
+
   async editCommandsList(oldTag: WrapperTag | undefined, newTag: WrapperTag | undefined) {
     if (oldTag !== undefined) {
       //@ts-ignore
@@ -41,7 +41,7 @@ export default class WrapWithShortcut extends Plugin {
       });
     }
   }
-  
+
   async removeAllDeletedWrapCommand() {
     //@ts-ignore
     const pluginCommands = Object.keys(this.app.commands.commands).filter(key => key.startsWith('obsidian-wrap-with-shortcuts'));
@@ -61,11 +61,19 @@ export default class WrapWithShortcut extends Plugin {
       await this.applyWrapperTagID();
     }
 
-    this.settings.wrapperTags.forEach((wrapperTag) => {
-      this.editCommandsList(undefined, wrapperTag);
-    });
-
+    this.settings.wrapperTags.forEach((wrapperTag, index) => {
+      this.getCommand (wrapperTag,index)
+    })
     this.addSettingTab(new SettingsTab(this));
+  }
+
+  getCommand (wrapperTag:WrapperTag,index:number) {
+    const command: Command = {
+      id: `wrap-with-shortcut-${wrapperTag.id}`,
+      name: `Toggle ${wrapperTag.name}`,
+      editorCallback: (editor: Editor) => this.wrapSelectedTextIn(editor, wrapperTag.startTag, wrapperTag.endTag),
+    };
+    this.addCommand(command);
   }
 
   wrapSelectedTextIn(editor: Editor, startTag = '<u>', endTag = '</u>'): void {
@@ -130,7 +138,7 @@ export default class WrapWithShortcut extends Plugin {
     });
     await this.saveSettings();
   }
-  
+
   onunload() {
     console.log("Unload plugin wrap-with-shortcut")
   }

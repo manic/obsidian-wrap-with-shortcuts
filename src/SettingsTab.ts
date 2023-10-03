@@ -1,4 +1,4 @@
-import { PluginSettingTab, Setting } from "obsidian";
+import { PluginSettingTab, Setting, Notice } from "obsidian";
 import WrapWithShortcut from "../main";
 import WrapperCreatorModal from "./WrapperCreatorModal"
 
@@ -8,31 +8,6 @@ export default class SettingsTab extends PluginSettingTab {
 	constructor(plugin: WrapWithShortcut) {
 		super(plugin.app, plugin);
 		this.plugin = plugin;
-
-		addEventListener("M-wrapperAdded", async (e: CustomEvent) => {
-			this.plugin.settings.wrapperTags.push(e.detail);
-			this.sortSettings();
-
-			await this.plugin.saveSettings();
-			await this.plugin.editCommandsList(undefined, e.detail);
-			this.display();
-		});
-
-		addEventListener("M-wrapperEditted", async (e: CustomEvent) => {
-			const tags = this.plugin.settings.wrapperTags;
-			const index = tags.findIndex(tag => tag.name === e.detail.name);
-			if (index === -1) {
-				this.plugin.settings.wrapperTags.push(e.detail);
-				await this.plugin.editCommandsList(undefined, e.detail);
-			} else {
-				this.plugin.settings.wrapperTags = [...tags.slice(0, index), e.detail, ...tags.slice(index + 1)];
-				await this.plugin.editCommandsList(tags[index], e.detail);
-			}
-			this.sortSettings();
-
-			await this.plugin.saveSettings();
-			this.display();
-		});
 	}
 
 	sortSettings(): void {
@@ -54,7 +29,13 @@ export default class SettingsTab extends PluginSettingTab {
 			.addButton(cb => {
 				cb.setButtonText("+")
 					.onClick(() => {
-						new WrapperCreatorModal(this.plugin).open();
+						new WrapperCreatorModal(this.plugin, async (result) => {
+							this.plugin.settings.wrapperTags.push(result);
+							this.display();
+							await this.plugin.saveSettings();
+							const index = this.plugin.settings.wrapperTags.length;
+							this.plugin.getCommand(result, index);
+						}).open();
 					})
 			})
 
@@ -67,15 +48,37 @@ export default class SettingsTab extends PluginSettingTab {
 				.addExtraButton(bt => {
 					bt.setIcon("pencil");
 					bt.onClick(async () => {
-						new WrapperCreatorModal(this.plugin, wrapperTag).open();
+						new WrapperCreatorModal(this.plugin,
+							async (result) => {
+								const tags = this.plugin.settings.wrapperTags;
+								const index = tags.findIndex(
+									(tag) => tag.name === result.name
+								);
+								if (index === -1) {
+									this.plugin.settings.wrapperTags.push(
+										result
+									);
+								} else {
+									this.plugin.settings.wrapperTags = [
+										...tags.slice(0, index),
+										result,
+										...tags.slice(index + 1),
+									];
+								}
+								this.sortSettings();
+								this.display();
+								await this.plugin.saveSettings();
+							},
+							wrapperTag).open();
 					})
 				})
 				.addExtraButton(bt => {
 					bt.setIcon("trash");
 					bt.onClick(async () => {
+						const cmd = this.plugin.manifest.id + ":" + `wrap-with-shortcut-${wrapperTag.id}`
+						await this.app.commands.removeCommand(cmd);
 						this.plugin.settings.wrapperTags.remove(wrapperTag);
 						this.display();
-						await this.plugin.removeAllDeletedWrapCommand(wrapperTag)
 						await this.plugin.saveSettings();
 					})
 				})
