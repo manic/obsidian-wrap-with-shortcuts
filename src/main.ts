@@ -1,5 +1,5 @@
-import { Command, Editor, EditorPosition, Plugin} from "obsidian";
-import SettingsTab from './src/SettingsTab'
+import { Command, Editor, EditorPosition, Plugin } from "obsidian";
+import SettingsTab from './SettingsTab'
 
 export interface WrapperTag {
   id?: string; // 20220904: compitable with older version, mark as optional
@@ -33,15 +33,18 @@ export default class WrapWithShortcut extends Plugin {
     }
 
     this.settings.wrapperTags.forEach((wrapperTag, index) => {
-      const command: Command = {
-        id: `wrap-with-shortcut-${wrapperTag.id}`,
-        name: `Toggle ${wrapperTag.name}`,
-        editorCallback: (editor: Editor) => this.wrapSelectedTextIn(editor, wrapperTag.startTag, wrapperTag.endTag),
-      };
-      this.addCommand(command);
-    });
-
+      this.getCommand(wrapperTag, index)
+    })
     this.addSettingTab(new SettingsTab(this));
+  }
+
+  getCommand(wrapperTag: WrapperTag, index: number) {
+    const command: Command = {
+      id: `wrap-with-shortcut-${wrapperTag.id}`,
+      name: `Toggle ${wrapperTag.name}`,
+      editorCallback: (editor: Editor) => this.wrapSelectedTextIn(editor, wrapperTag.startTag, wrapperTag.endTag),
+    };
+    this.addCommand(command);
   }
 
   wrapSelectedTextIn(editor: Editor, startTag = '<u>', endTag = '</u>'): void {

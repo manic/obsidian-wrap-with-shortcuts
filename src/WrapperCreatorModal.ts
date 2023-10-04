@@ -1,13 +1,14 @@
 import { Modal, Setting } from "obsidian";
 
-import WrapWithShortcut, { WrapperTag } from "../main";
+import WrapWithShortcut, { WrapperTag } from "./main";
 
 export default class WrapperCreatorModal extends Modal {
 	plugin: WrapWithShortcut;
 	wrapper: WrapperTag;
 	editMode: boolean;
+	onSubmit: (wrapper: WrapperTag) => void;
 
-	constructor(plugin: WrapWithShortcut, wrapper?: WrapperTag) {
+	constructor(plugin: WrapWithShortcut, onSubmit: (wrapper: WrapperTag) => void, wrapper?: WrapperTag) {
 		super(plugin.app);
 		if (wrapper) {
 			this.wrapper = wrapper;
@@ -16,6 +17,7 @@ export default class WrapperCreatorModal extends Modal {
 			this.wrapper = { id: `w${new Date().getTime()}`, name: '', startTag: '', endTag: '' };
 			this.editMode = false;
 		}
+		this.onSubmit = onSubmit;
 	}
 
 	onOpen() {
@@ -58,16 +60,15 @@ export default class WrapperCreatorModal extends Modal {
 					})
 			})
 
-		const btnDiv = el.createDiv({ cls: "M-flex-center" })
-		const btn = createEl("button", { text: "Finish" })
-		btnDiv.appendChild(btn);
-		btn.addEventListener("click", () => {
-			const eventName = this.editMode ? "M-wrapperEditted" : "M-wrapperAdded";
-			dispatchEvent(new CustomEvent(eventName, {
-				detail: this.wrapper
-			}));
-			this.close();
-		});
+		new Setting(el).addButton((btn) =>
+		btn
+			.setButtonText("Submit")
+			.setCta()
+			.onClick(() => {
+				this.onSubmit(this.wrapper);
+				this.close();
+			})
+		);
 
 	}
 }

@@ -1,6 +1,7 @@
 import esbuild from "esbuild";
 import process from "process";
 import builtins from 'builtin-modules'
+import path from 'path';
 
 const banner =
 `/*
@@ -11,11 +12,15 @@ if you want to view the source, please visit the github repository of this plugi
 
 const prod = (process.argv[2] === 'production');
 
+let output = (process.argv.length > 3 && process.argv[3] === '--output-dir') ? process.argv[4] : '.';
+output = path.join(output, 'main.js');
+
+
 esbuild.build({
 	banner: {
 		js: banner,
 	},
-	entryPoints: ['main.ts'],
+	entryPoints: ['src/main.ts'],
 	bundle: true,
 	external: ['obsidian', 'electron', ...builtins],
 	format: 'cjs',
@@ -24,5 +29,5 @@ esbuild.build({
 	logLevel: "info",
 	sourcemap: prod ? false : 'inline',
 	treeShaking: true,
-	outfile: 'main.js',
+	outfile: output,
 }).catch(() => process.exit(1));
